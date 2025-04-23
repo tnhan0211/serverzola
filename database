@@ -1,0 +1,19 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid == $uid || auth.token.isAdmin === true || auth.token.isSuperAdmin === true)",
+        ".write": "auth != null && (auth.uid == $uid || auth.token.isAdmin === true || auth.token.isSuperAdmin === true)"
+      }
+    },
+    "posts": {
+      "$postId": {
+        ".write": "auth != null && (auth.token.isAdmin === true || auth.token.isSuperAdmin === true)"
+      }
+    },
+    "admin": {
+      ".read": "auth != null && (auth.token.isAdmin === true || auth.token.isSuperAdmin === true)",
+      ".write": "auth != null && (auth.token.isAdmin === true || auth.token.isSuperAdmin === true)"
+    }
+  }
+}

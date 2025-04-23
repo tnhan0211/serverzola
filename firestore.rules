@@ -1,0 +1,72 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null && (request.auth.uid == userId || isAdmin());
+    }
+
+    // Private messages collection
+    match /private_messages/{messageId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+
+    // Group chats collection
+    match /group_chats/{groupId} {
+      allow read: if request.auth != null && isGroupMember(groupId);
+      allow write: if request.auth != null && (isGroupAdmin(groupId) || isAdmin());
+    }
+
+    // Group members collection
+    match /group_members/{userId}/{groupId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null && (request.auth.uid == userId || isAdmin());
+    }
+
+    // Group messages collection
+    match /group_messages/{messageId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+
+    // Friendships collection
+    match /friendships/{userId}/{friendId} {
+      allow read: if request.auth != null && (request.auth.uid == userId || request.auth.uid == friendId);
+      allow write: if request.auth != null && (request.auth.uid == userId || request.auth.uid == friendId);
+    }
+
+    // Friend requests collection
+    match /friend_requests/{senderId}/{receiverId} {
+      allow read: if request.auth != null && (request.auth.uid == senderId || request.auth.uid == receiverId);
+      allow write: if request.auth != null && (request.auth.uid == senderId || request.auth.uid == receiverId);
+    }
+
+    // User privacy collection
+    match /user_privacy/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // User activity collection
+    match /user_activity/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
+
+// Helper functions
+function isAdmin() {
+  return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super_admin'];
+}
+
+function isGroupMember(groupId) {
+  return exists(/databases/$(database)/documents/group_members/$(request.auth.uid)/$(groupId));
+}
+
+function isGroupAdmin(groupId) {
+  return exists(/databases/$(database)/documents/group_members/$(request.auth.uid)/$(groupId)) &&
+         get(/databases/$(database)/documents/group_members/$(request.auth.uid)/$(groupId)).data.role == 'admin';
+}

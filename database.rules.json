@@ -1,0 +1,85 @@
+{
+  "rules": {
+    ".read": "auth != null",
+    ".write": "auth != null",
+    
+    "users": {
+      "$uid": {
+        ".read": "$uid === auth.uid",
+        ".write": "$uid === auth.uid || root.child('users/' + auth.uid + '/role').val() === 'admin' || root.child('users/' + auth.uid + '/role').val() === 'super_admin'"
+      }
+    },
+    
+    "private_messages": {
+      ".indexOn": ["sender_id", "receiver_id", "created_at"],
+      "$message_id": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    
+    "group_chats": {
+      "$group_id": {
+        ".read": "auth != null && root.child('group_members/' + auth.uid + '/' + $group_id).exists()",
+        ".write": "auth != null && (root.child('group_members/' + auth.uid + '/' + $group_id + '/role').val() === 'admin' || root.child('users/' + auth.uid + '/role').val() === 'admin' || root.child('users/' + auth.uid + '/role').val() === 'super_admin')"
+      }
+    },
+    
+    "group_members": {
+      "$user_id": {
+        "$group_id": {
+          ".read": "$user_id === auth.uid",
+          ".write": "$user_id === auth.uid || root.child('users/' + auth.uid + '/role').val() === 'admin' || root.child('users/' + auth.uid + '/role').val() === 'super_admin'"
+        }
+      }
+    },
+    
+    "group_messages": {
+      ".indexOn": ["sender_id", "group_id", "created_at"],
+      "$message_id": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    
+    "friendships": {
+      "$user_id": {
+        "$friend_id": {
+          ".read": "$user_id === auth.uid || $friend_id === auth.uid",
+          ".write": "$user_id === auth.uid || $friend_id === auth.uid"
+        }
+      }
+    },
+    
+    "friend_requests": {
+      "$sender_id": {
+        "$receiver_id": {
+          ".read": "$sender_id === auth.uid || $receiver_id === auth.uid",
+          ".write": "$sender_id === auth.uid || $receiver_id === auth.uid"
+        }
+      }
+    },
+    
+    "user_privacy": {
+      "$uid": {
+        ".read": "$uid === auth.uid",
+        ".write": "$uid === auth.uid"
+      }
+    },
+    
+    "user_activity": {
+      "$uid": {
+        ".read": "$uid === auth.uid",
+        ".write": "$uid === auth.uid"
+      }
+    },
+    
+    "token_blacklist": {
+      ".indexOn": ["token"],
+      "$token": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    }
+  }
+}
